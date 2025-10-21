@@ -8,16 +8,15 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
     
-    env:
-        AWS-REGION: us-east-2
-        BUCKET_NAME: ${{ (github.ref == 'refs/heads/main' && 'rdicidr-app-prod') || (github.ref == 'refs/heads/stage' && 'rdicidr-app-stage') || (github.ref == 'refs/heads/devel' && 'rdicidr-app-devel') }}
-        DISTRIBUTION_ID: ${{ (github.ref == 'refs/heads/main' && secrets.PROD_DISTRIBUTION_ID) || (github.ref == 'refs/heads/stage' && secrets.STAGE_DISTRIBUTION_ID) || (github.ref == 'refs/heads/devel' && secrets.DEVEL_DISTRIBUTION_ID) }}
+        env:
+            BUCKET_NAME: ${{ (github.ref == 'refs/heads/main' && 'rdicidr-app-prod') || (github.ref == 'refs/heads/stage' && 'rdicidr-app-stage') || (github.ref == 'refs/heads/devel' && 'rdicidr-app-devel') }}
+            DISTRIBUTION_ID: ${{ (github.ref == 'refs/heads/main' && secrets.PROD_DISTRIBUTION_ID) || (github.ref == 'refs/heads/stage' && secrets.STAGE_DISTRIBUTION_ID) || (github.ref == 'refs/heads/devel' && secrets.DEVEL_DISTRIBUTION_ID) }}
     
-    permisions:
-        id-token: write
-        content: read
+        permissions:
+            id-token: write
+            contents: read
     
-    steps:
+        steps:
         - name: Check out code
           uses: actions/checkout@v2
 
@@ -30,6 +29,18 @@ jobs:
           run: npm ci
           
         - name: Build project
-           run: npm run build
+          run: npm run build
+        - name: Configure AWS Credential
+          uses: aws-actions/configure-aws-credentials@v5.1.0
+          with:
+              role-to-asume: ${{secrets.AWS_OIDC_ROLE_ARN}}
+              aws-region: us-east-2
+        - name: Deploy to S3
+          run: aws s3 sync ./build s3://${{env.BUCKET_NAME}} --delete
+        - name: Invalidate Cache
+          run: |
+            aws cloudfront create-invalidation \
+                --distribution-id ${{env.DISTRIBUTION_ID}} \
+                --paths "/*"
 
     
