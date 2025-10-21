@@ -1,0 +1,16 @@
+name: Check Stage merge
+
+on: 
+  pull_request:
+    branches: 
+        - stage
+jobs:
+  check-source-brach:
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: check branch
+        if: github.head_ref != 'devel'
+        run: |
+            echo "Error"
+            exit 1
