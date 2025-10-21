@@ -1,0 +1,18 @@
+name: Check Stage merge
+
+on: 
+  pull_request:
+    branches: 
+        - devel
+jobs:
+  check-source-brach:
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: check branch
+        if: |
+          !startsWith(github.head_ref, 'feature/') &&
+          !startsWith(github.head_ref, 'bugfix/')
+        run: |
+            echo "Error"
+            exit 1
