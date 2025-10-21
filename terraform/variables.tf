@@ -1,5 +1,12 @@
 # In this file put the variables related to the deployment
-variable "variable_name" {
-    type = "type",
-    description = "Description"
+variable "region" {
+    type = string
+    description = "Aws region"
+    default = "us-east-2"
+}
+
+variable "app_name" {
+    type = string
+    default = "rdicidr"
+  
 }
