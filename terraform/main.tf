@@ -111,6 +111,40 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
       restriction_type = "none"
     }
   }
+  custom_error_response {
+    error_caching_min_ttl = 10
+    error_code = 404
+    response_code = 200
+    response_page_path = "/index.html"
+  }
+   custom_error_response {
+    error_caching_min_ttl = 10
+    error_code = 403
+    response_code = 200
+    response_page_path = "/index.html"
+  }
+}
+
+resource "aws_s3_bucket_policy" "app_policy" {
+    bucket = aws_s3_bucket.app_bucket.id
+    policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Sid = "AllowCloudFrontOAC"
+                Effect = "Allow"
+                Principal = {Service = "cloudfront.amazonaws.com"}
+                Action = "s3:GetObject"
+                Resource = "${aws_s3_bucket.app_bucket.arn}/*"
+                Condition = {
+                    StringEquals = {
+                        "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution.arn
+                    }
+                }
+            }
+        ]
+    })
+  
 }
 
 
